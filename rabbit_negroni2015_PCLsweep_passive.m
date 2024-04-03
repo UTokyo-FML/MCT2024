@@ -83,7 +83,7 @@ ICaslinto=0;
 global CL
 span1=3000:-50:1050;
 span2=1000:-20:80;
-PCLspan=2000;%[span1 span2];
+PCLspan=[span1 span2];
 nPCL = size(PCLspan,2);
 
 % Gating variables      
@@ -112,14 +112,14 @@ y40=[Ca_sro; Najo; Naslo; Naio; Kio; Cajo; Caslo; Caio; Vmo; rtoso; ];
 y50=[Tstar; TCa; TCatilde; TCastar;  X_w;  X_p;];
 % Put everything together
 y0  = [y10;y20;y30;y40;y50];    
-load('yfinal_2000'); % load output of previous simulation saved as yfinal.mat
+load('yfinal_3000'); % load output of previous simulation saved as yfinal.mat
 y0 = yfinal; % Lneg0 and Qkarray0 is also loaded here
 
 LFCa=zeros(7,nPCL);
 LnegProfileCL=zeros(nPCL,2000);
 tarrayCL=zeros(nPCL,2000);
 
-nbeat = 500;
+nbeat = 300;
 %tspan = [0;30e3];
 %nbeat = round(tspan(2)/PCLspan(1)); % max #cycle = total calc time / min PCL
 APD     =zeros(nPCL,nbeat); 
@@ -132,9 +132,9 @@ nb_save=20;
 restitutionCurve = zeros(nPCL*nb_save,7);
 
 % Run programs changing PCL
-for iPCL = 1:4
-PCL=2000;%PCLspan(iPCL);
-CL = 0.02*iPCL; % closs linker is constant this time.
+for iPCL = 1:nPCL
+PCL=PCLspan(iPCL);
+CL = 0.10; % closs linker is constant this time.
 
 %% Single Run Simulation
 tspan = [0; PCL*nbeat];
@@ -240,7 +240,7 @@ VNbeat=y(jstrNbeat:end,39);
 CaiNbeat=y(jstrNbeat:end,38)*1000;
 CasrNbeat=y(jstrNbeat:end,31);
 tabletVCa=table(tNbeat,VNbeat,CaiNbeat,CasrNbeat);
-filename=strcat("./result/tVCa_CL",num2str(CL*100),".txt");
+filename=strcat("./result/tVCa",num2str(PCL),".txt");
 writetable(tabletVCa,filename,'Delimiter','\t','WriteRowNames',true);
 
 
@@ -254,10 +254,10 @@ INaCa = Ionfluxarray(istrNbeat:iend,2);
 Jrel  = Ionfluxarray(istrNbeat:iend,3);
 Jserca= Ionfluxarray(istrNbeat:iend,4);
 tableMechIon=table(tarrayNbeat,LnegNbeat,forceNbeat,gelForceNbeat,pCaCoeffNbeat,ICa,INaCa,Jrel,Jserca);
-filename=strcat("./result/MechIon_CL",num2str(CL*100),".txt");
+filename=strcat("./result/MechIon",num2str(PCL),".txt");
 writetable(tableMechIon,filename,'Delimiter','\t','WriteRowNames',true);
 
-filename=strcat("./result/yfinal_CL",num2str(CL*100),".mat");
+filename=strcat("./result/yfinal_",num2str(PCL),".mat");
 yfinal = y(end,:);
 save(filename,"yfinal","Lneg0","Qkarray0");
 
