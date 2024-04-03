@@ -454,12 +454,7 @@ Zr =  7.2626e9; %[/mM^3/ms] <-[/uM^3/ms]
 %y50=[Tstar; TCa; TCatilde; TCastar;  X_w;  X_p;   Lneg;];
 Tstar=y(41); TCa=y(42); TCatilde=y(43); TCastar=y(44); X_w=y(45); X_p=y(46);
 global Lneg force istep tarray Qkarray udotarray CL gelForce Ionfluxarray pCaCoeffarray;
-%fun=@(x)isometric(x,TCatilde, TCastar, Tstar, X_w, X_p);
-%fun=@(x)loadfree(x,TCatilde, TCastar, Tstar, X_w, X_p);
-% options=optimoptions(@fsolve,'Display','none');
-% x0=Lneg(istep);
-% L=fsolve(fun,x0,options);
-% mech calculation first to feedback on currents
+
 if(t>tarray(istep))
     istep=istep+1;
 end
@@ -477,9 +472,6 @@ else
     Qk=Qkarray(istep-1,:).';
     L=Lneg(istep-1);
 end
-%[L,Fb,Qk,udot1] = variableHyperGel_variableDt(TCatilde,TCastar,Tstar,X_w,X_p, dt_s,Qk,L,CL);
-%[L,Fb,Qk,udot1] = variableHyperGel_variableDt_passiveGelSpring(TCatilde,TCastar,Tstar,X_w,X_p, dt_s,Qk,L,CL);
-%[L,Fb,gelF,Qk,udot1] = variableHyperGel2_variableDt_passiveGelSpring(TCatilde,TCastar,Tstar,X_w,X_p, dt_s,Qk,L,CL);
 [L,Fb,gelF,Qk,udot1] = variableHyperGel2_variableDt_passive(TCatilde,TCastar,Tstar,X_w,X_p, dt_s,Qk,L,CL);
 Lneg(istep)=L;
 force(istep)=Fb; %Aw*TCatilde*(L-X_w)+Ap*(TCastar+Tstar)*(L-X_p);
@@ -489,7 +481,7 @@ udotarray(istep)=udot1;
 tarray(istep)=t;
 
 %--------------MCT-----------------------------------------------------------
-% MCT9 gelF dependent
+% MCT1 gelF dependent
 d0=1.6;
 d1=2;
 d2=2;
@@ -725,28 +717,7 @@ ydot(36) = -I_Ca_tot_junc*Cmem/(Vjunc*2*Frdy)+J_ca_juncsl/Vjunc*(y(37)-y(36))...
     -J_CaB_junction+(J_SRCarel)*Vsr/Vjunc+J_SRleak*Vmyo/Vjunc;  % Ca_j
 ydot(37) = -I_Ca_tot_sl*Cmem/(Vsl*2*Frdy)+J_ca_juncsl/Vsl*(y(36)-y(37))...
     + J_ca_slmyo/Vsl*(y(38)-y(37))-J_CaB_sl;   % Ca_sl
-%ydot(36)=0;
-%ydot(37)=0;
-% ydot(38) = -J_serca*Vsr/Vmyo-J_CaB_cytosol;%+J_ca_slmyo/Vmyo*(y(37)-y(38));    % [mM/msec]
 ydot(38) = -J_serca*Vsr/Vmyo-J_CaB_cytosol +J_ca_slmyo/Vmyo*(y(37)-y(38));
-%ydot(38)=0;
-%if (t<15000)
-%    ydot(41) = 0;
-%    ydot(42) = 0;
-%else
-%ydot(41) = -I_Na*Cmem/(Vmyo*Frdy);
-%ydot(42) = -I_Ca_sl*Cmem/(Vjunc*2*Frdy)*Vjunc/Vmyo;
-%end
-
-
-% if(t>=tarray(istep+1))
-%     istep=istep+1;
-%     [L,F,Ldot] = IsometHyperGel(TCatilde,TCastar,Tstar,X_w,X_p, dt_s);
-%     Lneg(istep)=L;
-%     force(istep)=F; %Aw*TCatilde*(L-X_w)+Ap*(TCastar+Tstar)*(L-X_p);
-% else
-%     L = Lneg(istep)+Ldot*(t-tarray(istep));
-% end
 
 Tneg = 0.023-Tstar-TCa-TCatilde-TCastar;
 fneg=Ya*exp(-Ra*(L-La)^2);
@@ -762,17 +733,6 @@ ydot(43)=fneg*TCa-ga*TCatilde+Zp*TCastar-Yp*TCatilde;%---------TCatilde
 ydot(44)=Yp*TCatilde-Zp*TCastar+Zr*Tstar*y(38)^3-Yr*TCastar;%--TCastar
 ydot(45)=Bw*(L-X_w-h_wr);
 ydot(46)=Bp*(L-X_p-h_pr);
-% Isometric
-%denom=5*Ke*(Lneg-L0)^4+Le+Aw*ydot(43)+Ap*(ydot(44)+ydot(41))+alpha_neg*beta_neg*exp(beta_neg*(Lm-Lneg));
-% Load free
-% denom=5*Ke*(Lneg-L0)^4+Le+Aw*ydot(43)+Ap*(ydot(44)+ydot(41));
-%numerator=Aw*y(43)*ydot(45)+Ap*(TCastar+Tstar)*ydot(46)-Aw*ydot(43)*(Lneg-X_w)-Ap*(ydot(44)+ydot(41))*(Lneg-X_p);
-%ydot(47)=numerator/denom;
-% Force_passive=Ke*(Lneg-L0)^5+Le*(Lneg-L0);
-% Force_binding=Aw*TCatilde*(Lneg-X_w)+ Ap*(TCastar+Tstar)*(Lneg-X_p);
-% Fm=Force_passive+Force_binding;
-% Fs=alpha_neg*(exp(beta_neg*(Lm-Lneg))-1);
-
 
 %% Simulation type
 protocol = 'pace1';
