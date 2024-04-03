@@ -71,10 +71,6 @@ tau0 = h0 + h1*CL+h2*CL^2; %eq 9b
 s0   = 0.58;
 s1   = 55;
 sigma0 = s0*(1-exp(-s1*CL)); %eq 9c
-% G0
-% tau0
-% sigma0
-% pause(10)
 Ginfty= 0;     % [kPa] G0*0.1; %
 zeta = zeros(1,Nmaxwell);
 tau = zeros(1,Nmaxwell);
@@ -88,7 +84,6 @@ for i = 1:Nmaxwell
 end
 % for debugging, check G(t): relaxation function
 % Mohammad et al. Int. J. Eng. Sci 165 (2021) figure 2, (b) and (c)
-% Amplitude is slightly different though....
 tsteps = -2: 0.05 :2;
 omega  = zeros(size(tsteps));
 freq   = zeros(size(tsteps));
@@ -224,84 +219,4 @@ figure(2);
 plot(alpha,Sarray);
 xlabel('strain')
 ylabel('stress')
-output = 1;
-
-function [S,Dmat] = RinYin(fr, alpha)
-%unit kPa, um, nN
-cp1 =  3080.D-3;
-cp2 =  3240.D-3;
-cp3 =   359.D-3;
-cp4 = -1940.D-3;
-cp5 =  1660.D-3;
-ca0 =  0.D-3 * fr;
-ca1 = -0.638903D1 * fr;
-ca2 =  0.179707D2 * fr;
-ca3 =  0.173676D2 * fr;
-ca4 =  0.760996D1 * fr^2;
-%    ca5 =  0.194223D2 * fr**2;
-ca5 =  0.D0;
-
-% Assume 1D stretch alpha, incompressible. Then C mat becomes
-%     | alpha^2                   |
-% C = |          1/alpha          |
-%     |                   1/alpha |
-pi1 = alpha^2+2/alpha;
-pi4 = alpha^2;
-ri4 = pi4;
-ri1 = alpha^2+2/alpha;
-ri1m = ri1 -3.D0;
-ri4m = alpha - 1.D0;
-ri4ma = ri4 - 1.D0;
-
-% passive
-dwdr1p = cp3 + cp4*ri4m + 2.D0*cp5*ri1m;
-dwdr4p = (1.D0/2.D0)/alpha *(2.D0*cp1*ri4m +3.D0*cp2*(ri4m)^ ...
-    2+cp4*ri1m);
-dwd11p = 2.D0*cp5;
-dwd14p = (1.D0/2.D0)/alpha*cp4;
-dwd41p = (1.D0/2.D0)/alpha*cp4;
-dwd44p = (-1.D0/4.D0)*((ri4)^(-3.D0/2.D0)) *(2.D0*cp1*ri4m+3.D0*cp2*(ri4m)^2+cp4*ri1m) ...
-       + (1.D0/2.D0)/alpha*(cp1/alpha+3.D0*cp2/alpha*ri4m);
-
-% active
-dwdr1a = ca1 * ri4ma + 2.D0 * ca2 * ri1m + ca4;
-dwdr4a = ca1 * ri1m + 2.D0 * ca3 * ri4ma + ca5;
-dwd11a = 2.D0 * ca2;
-dwd14a = 1.D0 * ca1;
-dwd41a = 1.D0 * ca1;
-dwd44a = 2.D0 * ca3;
-
-dwdr1 = dwdr1p + dwdr1a;
-dwdr4 = dwdr4p + dwdr4a;
-dwd11 = dwd11p + dwd11a;
-dwd14 = dwd14p + dwd14a;
-dwd41 = dwd41p + dwd41a;
-dwd44 = dwd44p + dwd44a;
-
-% i,j,k,l = 1
-dr1dcij = 2/3*(1-1/alpha^2); % = 1.D0/rdetc1 * (del(i,j)-pi1*rci(i,j)/3.D0);
-dr4dcij = 1; % = dn(i)*dn(j)
-S       = 2.D0 * ( dwdr1 * dr1dcij + dwdr4 * dr4dcij );
-dr1dckl = 2/3*(1-1/alpha^2); % = 1.D0/rdetc1 * (del(k,l)-pi1*rci(k,l)/3.D0)
-dr4dckl = 1; % = dn(k)*dn(l)
-ddr1dcdc = -1/3*(1-pi1/alpha^2/3)/alpha^2+ (-1/alpha^2+pi1/alpha^2/alpha^2)/3.0; % = -1.D0/rdetc1/3.D0 * (del(i,j)-pi1*rci(i,j)/3.D0)*rci(k,l) + 1.D0/rdetc1 * (-rci(i,j)*del(k,l) + pi1*rci(i,k)*rci(l,j)) /3.D0
-ddr4dcdc = 0.D0;
-Dmat = 4.0 *((dwd11*dr1dckl + dwd14*dr4dckl) * dr1dcij  + dwdr1 * ddr1dcdc ...
-            +(dwd41*dr1dckl + dwd44*dr4dckl) * dr4dcij  + dwdr4 * ddr4dcdc );
-
-function output = DebugRinYinCheck()
-% Debug check the stress-stretch relationship
-alpha = 0.6 : 0.01: 2;
-fr = 0: 0.2: 1;
-
-Sarray = zeros(size(alpha,2),size(fr,2));
-for i=1:size(alpha,2)
-    for j=1:size(fr,2)
-        [Sarray(i,j),Dmat] = RinYin(fr(j), alpha(i));
-    end
-end
-figure(2);
-%plot(alpha,Sarray(:,1),"-",alpha,Sarray(:,3),"--",alpha,Sarray(:,5),"-.",alpha,Sarray(:,6),":");
-plot(alpha,Sarray(:,1),alpha,Sarray(:,2),alpha,Sarray(:,3),alpha,Sarray(:,4),alpha,Sarray(:,5),alpha,Sarray(:,6));
-legend("passive","fr = 0.2","fr = 0.4","fr = 0.6","fr = 0.8","fr = 1.0");
 output = 1;
